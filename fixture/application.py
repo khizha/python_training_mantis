@@ -1,5 +1,6 @@
 from selenium import webdriver
 from fixture.session import SessionHelper
+from fixture.project import ProjectHelper
 
 class Application:
 
@@ -13,7 +14,8 @@ class Application:
         else:
             raise ValueError("Unrecognized browser %" % browser)
         self.session = SessionHelper(self)
-        self.base_url=base_url
+        self.project = ProjectHelper(self)
+        self.base_url = base_url
 
     def is_valid(self):
         try:
@@ -28,8 +30,6 @@ class Application:
     def open_home_page(self):
         wd = self.wd
         # check if we are not already on the home page
-        #if not (wd.current_url.endswith("localhost/addressbook/") and len(wd.find_elements_by_xpath("//input[@value='Send e-Mail']")) > 0):
-        #    wd.get("http://localhost/addressbook/")
         wd.get(self.base_url)
 
     def destroy(self):

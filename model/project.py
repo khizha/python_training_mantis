@@ -2,7 +2,7 @@ from sys import maxsize
 
 class Project:
 
-    def __init__(self, name=None, status=None, inherit=None, view=None, description=None, id=None):
+    def __init__(self, name=None, status=('development', 10), inherit="yes", view=('public', 10), description=None, id=None):
         self.name = name
         self.status = status
         self.inherit = inherit

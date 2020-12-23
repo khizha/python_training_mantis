@@ -33,7 +33,6 @@ class ProjectHelper:
         self.change_dropdown_value("view_state", project.view)
         self.change_field_value("description", project.description)
 
-
     def change_field_value(self, field_name, text):
         wd = self.app.wd
         if text is not None:
@@ -53,19 +52,6 @@ class ProjectHelper:
         if text == "no":
             wd.find_element_by_name("inherit_global").click()
 
-    def get_project_list(self):
-        # check if project cache is empty
-        if self.project_cache is None:
-            wd = self.app.wd
-            self.open_projects_page()
-            self.project_cache = []
-            for element in wd.find_elements_by_css_selector("span.group"):
-                text = element.text
-                # get attribute value from checkbox element residing inside span element
-                id = element.find_element_by_name("selected[]").get_attribute("value")
-                self.project_cache.append(Group(name=text, id=id))
-        return list(self.project_cache)
-
     project_cache = None
 
     def get_project_list(self):
@@ -75,20 +61,36 @@ class ProjectHelper:
             self.open_projects_page()
             self.project_cache = []
 
-            #print("")
-            #print("--------------- table length ---------------")
-            #print(len(wd.find_elements_by_xpath("//*[@class= 'width100']/tbody/tr")))
-            #print("")
+            for element in wd.find_elements_by_xpath('//a[contains(@href, "%s")]' % "project_id="):
+                text = element.get_attribute("text")
+                refstring = element.get_attribute('href')
+                id = refstring[refstring.rfind("=")+1:]
 
-            for element in wd.find_element_by_name("project_id").find_elements_by_tag_name("option"):
-                #print(element.get_attribute("value") + ":" + (element.text))
-                text = element.text
-                id = element.get_attribute("value")
-                if id != "0": # All Projects id=0
+                #print(text + " " + id)
+                if len(text) != 0:
                     self.project_cache.append(Project(name=text, id=id))
 
-            #print("")
-            #print("--------------- self.project_cache ---------------")
-            #print(self.project_cache)
-
         return list(self.project_cache)
+
+    def count(self):
+        wd = self.app.wd
+        self.open_projects_page()
+        return (len(wd.find_element_by_name("project_id").find_elements_by_tag_name("option")) - 1)
+
+    def delete_project_by_id(self, id):
+        wd = self.app.wd
+        self.open_projects_page()
+        # select first project
+        self.select_project_by_id(id)
+        # click delete project button
+        wd.find_element_by_xpath("//input[@value='Delete Project']").click()
+        # confirm project deletion
+        wd.find_element_by_xpath("//input[@value='Delete Project']").click()
+        #self.return_to_projects_page()
+        self.open_projects_page()
+        self.project_cache = None
+
+    def select_project_by_id(self, id):
+        wd = self.app.wd
+        # select the target (index) project in the list
+        wd.find_element_by_xpath("//a[contains(@href, 'manage_proj_edit_page.php?project_id=%s')]" % id).click()

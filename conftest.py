@@ -4,6 +4,7 @@ import pytest
 import json
 import os.path
 import jsonpickle
+import ftputil
 
 # global variable containing fixture
 fixture = None
@@ -28,23 +29,51 @@ def load_config(file):
 
     return target
 
-@pytest.fixture()
-#@pytest.fixture(scope = "session")
+@pytest.fixture(scope="session")
+def config(request):
+    #this fixture will be used by other fixtures
+    return load_config(request.config.getoption("--target"))
 
-def app(request):
+@pytest.fixture()
+def app(request, config):
     # use the global variable "fixture"
     global fixture
 
     browser = request.config.getoption("--browser")
 
-    web_config = load_config(request.config.getoption("--target"))['web']
-
     # check if fixture does not exist or is corrupted/invalid
     if fixture is None or not fixture.is_valid():
-        fixture = Application(browser=browser, base_url=web_config['baseUrl'])
+        fixture = Application(browser=browser, base_url=config['web']['baseUrl'])
     webadmin_config = load_config(request.config.getoption("--target"))['webadmin']
-    fixture.session.ensure_login(username=webadmin_config['username'], password=webadmin_config['password'])
     return fixture
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_server(request, config):
+    # using ftp protocol put the configuration file to the server
+    install_server_configuration(config['ftp']['host'], config['ftp']['username'], config['ftp']['password'])
+    def fin():
+        restore_server_configuration(config['ftp']['host'], config['ftp']['username'], config['ftp']['password'])
+    request.addfinalizer(fin)
+
+def install_server_configuration(host, username, password):
+    #create new connection to ftp server
+    with ftputil.FTPHost(host, username, password) as remote:
+        # if config file.bak exists on the remote server, remove it
+        if remote.path.isfile("config_inc.php.bak"):
+            remote.remove("config_inc.php.bak")
+        # if config file exists on the remote server, rename it
+        if remote.path.isfile("config_inc.php"):
+            remote.rename("config_inc.php", "config_inc.php.bak")
+        # upload the configuration file to the server
+        remote.upload(os.path.join(os.path.dirname(__file__), "resources/config_inc.php"), "config_inc.php")
+
+def restore_server_configuration(host, username, password):
+    #create new connection to ftp server
+    with ftputil.FTPHost(host, username, password) as remote:
+        if remote.path.isfile("config_inc.php.bak"):
+            if remote.path.isfile("config_inc.php"):
+                remote.remove("config_inc.php")
+            remote.rename("config_inc.php.bak", "config_inc.php")
 
 @pytest.fixture(scope="session", autouse=True)
 def stop(request):

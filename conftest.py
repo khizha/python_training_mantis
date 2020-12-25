@@ -43,8 +43,10 @@ def app(request, config):
 
     # check if fixture does not exist or is corrupted/invalid
     if fixture is None or not fixture.is_valid():
+#        fixture = Application(browser=browser, base_url=config['web']['baseUrl'])
         fixture = Application(browser=browser, config=config)
     webadmin_config = load_config(request.config.getoption("--target"))['webadmin']
+    fixture.session.ensure_login(username=webadmin_config['username'], password=webadmin_config['password'])
     return fixture
 
 @pytest.fixture(scope="session", autouse=True)

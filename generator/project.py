@@ -13,11 +13,11 @@ except getopt.GetoptError as err:
     getopt.usage()
     sys.exit(2)
 
-n = 1
+n = 5
 f = "data/project.json"
-status = (('development', 10), ('release', 30), ('stable', 50), ('obsolete', 70))
+status = (('development', 10, None), ('release', 30, None), ('stable', 50, 2), ('obsolete', 70, None))
 inherit = ('yes', 'no')
-viewstatus = (('public', 10), ('private', 50))
+viewstatus = (('public', 10, 2), ('private', 50, 3))
 
 for o, a in opts:
     if o == "-n":

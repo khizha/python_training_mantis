@@ -43,8 +43,12 @@ class ProjectHelper:
     def change_dropdown_value(self, field_name, value):
         wd = self.app.wd
         # select the chosen group from the drop-down list and click it
+        wd.find_element_by_name(field_name).click()
         Select(wd.find_element_by_name(field_name)).select_by_visible_text(value[0])
-        wd.find_element_by_xpath("//option[@value='%s']" % value[1]).click()
+ #       if value[2] is not None:
+  #          wd.find_element_by_xpath("(//option[@value='%s'])[%s]" % (value[1], value[2])).click()
+   #     else:
+    #        wd.find_element_by_xpath("//option[@value='%s']" % value[1]).click()
 
     def change_checkbox_value(self, field_name, text):
         wd = self.app.wd
